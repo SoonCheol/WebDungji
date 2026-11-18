@@ -23,6 +23,8 @@
 - Actions는 저장소 Secrets `WEB_DUNGJI_KEYSTORE_BASE64`, `WEB_DUNGJI_KEYSTORE_PASSWORD`, `WEB_DUNGJI_KEY_ALIAS`, `WEB_DUNGJI_KEY_PASSWORD`를 사용한다. 개인키와 비밀번호는 Git에 없다.
 - S24 Ultra는 ADB에 연결되지 않아 설치본 지문을 직접 대조하지 못했다. 설치된 0.1.0 debug APK가 위 지문이라면 같은 앱 ID와 동일하거나 더 높은 `versionCode`의 APK로 데이터를 보존하며 업데이트할 수 있다. 현재 `versionCode` 1은 동일 버전 교체에 해당한다.
 
+- 2026-11-19 사용자 실기기 확인: GitHub Actions에서 받은 APK로 기존 앱 업데이트가 정상적으로 이루어졌다고 사용자가 보고했다. 설치본 인증서의 ADB 직접 측정 및 앱 데이터/기능별 회귀 검사는 별도로 수행하지 않았다. GitHub 개발 환경 전환 및 사용자 업데이트 확인을 완료로 처리한다.
+
 ## 후속 작업 원칙
 
 - `main`의 새 커밋은 Actions 실행 결과와 APK 서명을 확인한다.

@@ -1,0 +1,53 @@
+name: Build compatible APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Restore private signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.WEB_DUNGJI_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.WEB_DUNGJI_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.WEB_DUNGJI_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.WEB_DUNGJI_KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_BASE64" && test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS" && test -n "$KEY_PASSWORD"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/webdungji.keystore"
+          echo "WEB_DUNGJI_KEYSTORE_PATH=$RUNNER_TEMP/webdungji.keystore" >> "$GITHUB_ENV"
+      - name: Build APK
+        working-directory: app-project
+        env:
+          WEB_DUNGJI_KEYSTORE_PASSWORD: ${{ secrets.WEB_DUNGJI_KEYSTORE_PASSWORD }}
+          WEB_DUNGJI_KEY_ALIAS: ${{ secrets.WEB_DUNGJI_KEY_ALIAS }}
+          WEB_DUNGJI_KEY_PASSWORD: ${{ secrets.WEB_DUNGJI_KEY_PASSWORD }}
+        run: bash ./gradlew assembleDebug --no-daemon --console=plain
+      - name: Verify compatible signature
+        run: |
+          apk=$(find app-project/app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print -quit)
+          test -n "$apk"
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk" > "$RUNNER_TEMP/apk-certs.txt"
+          grep -Fi '1a353d05b5eef04450557b24a91a196d1bcb7a5a1fa89ee522d19997d7ea6c0d' "$RUNNER_TEMP/apk-certs.txt"
+          sha256sum "$apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WebDungji-compatible-debug-apk
+          path: app-project/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30

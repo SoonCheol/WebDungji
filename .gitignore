@@ -1,0 +1,29 @@
+# Local Android and Gradle state
+**/.gradle/
+**/.kotlin/
+**/build/
+**/local.properties
+**/.idea/
+*.iml
+
+# Credentials and locally signed packages
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.apk
+.env
+.env.*
+
+# Historical local test environment and generated evidence
+/environment-test/
+/app-project/evidence/
+/tools/gradle-9.4.1/
+/tools/gradle-9.4.1-bin.zip
+/tools/commandlinetools.zip
+/tools/Build-EnvironmentTest.ps1
+
+# Local captures and logs
+*.log
+capture.png
+ui.xml

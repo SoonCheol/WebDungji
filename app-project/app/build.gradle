@@ -1,0 +1,71 @@
+plugins {
+ id 'com.android.application'
+ id 'org.jetbrains.kotlin.plugin.compose'
+ id 'com.google.devtools.ksp'
+}
+android {
+ namespace 'com.webdungji.app'
+ compileSdk 36
+ buildToolsVersion '36.0.0'
+ signingConfigs {
+  compatibleDebug {
+   def keyFile = System.getenv('WEB_DUNGJI_KEYSTORE_PATH')
+   if (keyFile) {
+    storeFile file(keyFile)
+    storePassword System.getenv('WEB_DUNGJI_KEYSTORE_PASSWORD')
+    keyAlias System.getenv('WEB_DUNGJI_KEY_ALIAS')
+    keyPassword System.getenv('WEB_DUNGJI_KEY_PASSWORD')
+   }
+  }
+ }
+ defaultConfig {
+  applicationId 'com.webdungji.app'
+  minSdk 29
+  targetSdk 36
+  versionCode 1
+  versionName '0.1.0'
+  testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+ }
+ buildFeatures { compose true; buildConfig true }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ buildTypes {
+  debug {
+   if (System.getenv('WEB_DUNGJI_KEYSTORE_PATH')) {
+    signingConfig signingConfigs.compatibleDebug
+   }
+  }
+  release { minifyEnabled false }
+ }
+}
+ksp { arg('room.schemaLocation', "$projectDir/schemas") }
+dependencies {
+ implementation platform('androidx.compose:compose-bom:2025.08.00')
+ implementation 'androidx.activity:activity-compose:1.10.1'
+ implementation 'androidx.compose.material3:material3'
+ implementation 'androidx.compose.material:material-icons-extended'
+ implementation 'androidx.compose.ui:ui'
+ implementation 'androidx.compose.ui:ui-tooling-preview'
+ implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2'
+ implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.9.2'
+ implementation 'androidx.room:room-runtime:2.8.4'
+ implementation 'androidx.room:room-ktx:2.8.4'
+ ksp 'androidx.room:room-compiler:2.8.4'
+ implementation 'androidx.datastore:datastore-preferences:1.1.7'
+ implementation 'org.jsoup:jsoup:1.21.2'
+ debugImplementation 'androidx.compose.ui:ui-tooling'
+ androidTestImplementation 'androidx.test:runner:1.6.2'
+ androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+ androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.3.0'
+ testImplementation 'junit:junit:4.13.2'
+}
+
+// Keep artifact names tied to the resolved versionName for each build variant.
+androidComponents {
+ onVariants(selector().all()) { variant ->
+  variant.outputs.each { output ->
+   output.outputFileName.set(output.versionName.map { version ->
+    "WebDungji-v${version}-${variant.buildType}.apk"
+   })
+  }
+ }
+}

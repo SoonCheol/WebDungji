@@ -13,13 +13,15 @@
 - GitHub: `https://github.com/SoonCheol/WebDungji`, 브랜치 `main`.
 - Gradle Wrapper 9.4.1은 공식 배포 URL과 SHA-256 고정값을 사용한다. 로컬 SDK 경로는 커밋하지 않는다.
 - `.github/workflows/apk.yml`은 `main` push와 수동 실행으로 debug APK를 빌드하고 artifact로 제공한다.
-- 이 문서의 GitHub 실행 상태, 커밋 SHA, artifact 링크는 최초 실제 빌드 확인 후 갱신한다.
+- 실제 검증: 커밋 `7e1ed7ea9dcd4d4a7a2bcf4e65e230fc2b9e1e1b`의 [Actions 실행 #44374994982](https://github.com/SoonCheol/WebDungji/actions/runs/44374994982) 두 번째 시도가 성공했다. Gradle `assembleDebug`, 서명 지문 검사, artifact 업로드가 모두 통과했다.
+- APK 다운로드: [WebDungji-compatible-debug-apk](https://github.com/SoonCheol/WebDungji/actions/runs/44374994982/artifacts/14461755383). GitHub Actions artifact 보존 기간은 30일이다.
+- 첫 실행은 제거된 Android SDK `tools` 패키지를 요청하는 setup 액션 v3 때문에 실패했다. v4로 수정했다. 위 실행의 첫 시도에서는 Compose 플러그인 다운로드가 실패했고, 실패 job 재실행에서 빌드가 완료됐다.
 
 ## 서명과 업데이트
 
 - 기존 0.1.0 debug APK와 로컬 `C:\Users\homes\.android\debug.keystore` 인증서 SHA-256 지문이 일치한다: `1A:35:3D:05:B5:EE:F0:44:50:55:7B:24:A9:1A:19:6D:1B:CB:7A:5A:1F:A8:9E:E5:22:D1:99:97:D7:EA:6C:0D`.
 - Actions는 저장소 Secrets `WEB_DUNGJI_KEYSTORE_BASE64`, `WEB_DUNGJI_KEYSTORE_PASSWORD`, `WEB_DUNGJI_KEY_ALIAS`, `WEB_DUNGJI_KEY_PASSWORD`를 사용한다. 개인키와 비밀번호는 Git에 없다.
-- S24 Ultra 설치본 서명은 기기 연결을 통해 확인해야 한다. 설치된 0.1.0 debug APK가 위 지문이라면 같은 앱 ID와 더 높은 `versionCode`의 APK로 데이터를 보존하며 업데이트할 수 있다. 현재 `versionCode` 1 재설치는 동일 버전 교체에 해당한다.
+- S24 Ultra는 ADB에 연결되지 않아 설치본 지문을 직접 대조하지 못했다. 설치된 0.1.0 debug APK가 위 지문이라면 같은 앱 ID와 동일하거나 더 높은 `versionCode`의 APK로 데이터를 보존하며 업데이트할 수 있다. 현재 `versionCode` 1은 동일 버전 교체에 해당한다.
 
 ## 후속 작업 원칙
 

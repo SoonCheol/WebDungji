@@ -62,7 +62,8 @@ jobs:
           APK="app-project/app/build/outputs/apk/debug/WebDungji-v$VERSION-debug.apk"
           test -f "$APK"
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists, skipping"
+            echo "Release $TAG exists; replacing APK with latest verified build"
+            gh release upload "$TAG" "$APK" --clobber
           else
             gh release create "$TAG" "$APK" --target "$GITHUB_SHA" --title "WebDungji $VERSION" --notes "Compatible signed debug APK."
           fi

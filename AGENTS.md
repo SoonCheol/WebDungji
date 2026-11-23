@@ -9,3 +9,13 @@
 - Actions 서명 비밀값은 저장소 Secrets에만 보관한다. 기존 debug APK 인증서 SHA-256 지문은 `1A:35:3D:05:B5:EE:F0:44:50:55:7B:24:A9:1A:19:6D:1B:CB:7A:5A:1F:A8:9E:E5:22:D1:99:97:D7:EA:6C:0D`이다. 빌드 후 지문이 다르면 기기에 설치하지 않는다.
 - S24 Ultra의 기존 앱을 삭제하거나 데이터를 초기화하지 않는다. 업데이트 필요 시 패키지명, 설치본과 새 APK의 서명을 확인한 뒤 `adb install -r`을 사용한다.
 - 문서와 빌드 설정 변경은 최소 범위로 검증한다. 실제 사용자 데이터를 건드리는 테스트는 명시적 요청이 있을 때만 실행한다.
+
+## Continuity and change control (2026-11-23)
+- Read AGENTS.md, docs/CURRENT-STATUS.md, actual main HEAD, and relevant code first.
+- Never create new clones, branches, repositories or deployment environments without permission.
+- Modify, commit, build, deploy only with explicit user instruction. Report each step separately.
+- Preserve existing app data, package ID and signing certificate. Increment versionCode on installable updates.
+- Never commit secrets, auth tokens, private keys, local.properties or user data.
+- Backups exclude WebView cookies, logins and secrets. Restore requires explicit merge or replacement selection.
+- Manual Google Drive document provider backup is NOT automatic synchronization. Do not conflate them.
+- Keep docs/CURRENT-STATUS.md, docs/ROADMAP.md and docs/RELEASE.md current.

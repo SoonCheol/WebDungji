@@ -40,6 +40,8 @@ interface WebAppDao {
  @Query("SELECT * FROM web_apps WHERE dirty = 1 ORDER BY updatedAt") suspend fun pending(): List<WebAppEntity>
  @Query("SELECT * FROM local_changes ORDER BY changedAt, changeId") suspend fun changes(): List<LocalChange>
  @Query("SELECT COALESCE(MAX(displayOrder), -1) + 1 FROM web_apps") suspend fun nextOrder(): Long
+ @Query("DELETE FROM web_apps") suspend fun deleteAll()
+ @Query("DELETE FROM local_changes") suspend fun deleteChanges()
  @Upsert suspend fun upsert(app: WebAppEntity)
  @Insert suspend fun record(change: LocalChange)
  @Query("UPDATE web_apps SET dirty = 0 WHERE id = :id AND revision = :revision") suspend fun acknowledge(id: String, revision: Long)

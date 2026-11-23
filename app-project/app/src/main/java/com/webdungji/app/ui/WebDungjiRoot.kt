@@ -255,6 +255,7 @@ fun SettingsScreen(model: AppViewModel, close: () -> Unit, edit: (String) -> Uni
    OutlinedButton(onClick = { clear = true }, modifier = Modifier.testTag("clear_site_data")) { Text(label("사이트 데이터 지우기", "Clear site data")) }
    Text(label("기본 프로필 전체에 적용됩니다. 웹앱 등록 목록은 유지됩니다.", "Applies to the entire default profile. Web app registrations are kept."), style = MaterialTheme.typography.bodySmall)
    if(cleared) Text(label("사이트 데이터를 지웠습니다.", "Site data cleared."))
+   BackupUpdateSection(model)
    TextButton(onClick = { information = true }) { Text(label("앱 정보", "About")) }
   }
  }

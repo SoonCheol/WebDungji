@@ -148,7 +148,8 @@ fun AppIcon(ref: String?, model: AppViewModel, modifier: Modifier = Modifier) {
 @Composable
 fun EditorScreen(model: AppViewModel, original: WebAppEntity?, close: () -> Unit) {
  val id = rememberSaveable { original?.id ?: UUID.randomUUID().toString() }
- var address by rememberSaveable { mutableStateOf(original?.startUrl ?: "") }
+ var address by rememberSaveable(original?.id) { mutableStateOf(UrlPolicy.withoutWebScheme(original?.startUrl ?: "")) }
+ var useHttps by rememberSaveable(original?.id) { mutableStateOf(original?.startUrl?.startsWith("http://", ignoreCase = true) != true) }
  var name by rememberSaveable { mutableStateOf(original?.name ?: "") }
  var icon by rememberSaveable { mutableStateOf(original?.iconRef) }
  var javaScript by rememberSaveable { mutableStateOf(original?.javaScript ?: true) }
@@ -166,9 +167,10 @@ fun EditorScreen(model: AppViewModel, original: WebAppEntity?, close: () -> Unit
   if(uri != null) scope.launch { busy = true; runCatching { model.repository.importImage(uri) }.onSuccess { icon = it }.onFailure { message = imageFailed }; busy = false }
  }
  val submit: () -> Unit = {
-    if(UrlPolicy.registration(address) == null || name.isBlank()) { invalid = true } else scope.launch {
+    val normalizedAddress = UrlPolicy.registrationWithScheme(address, useHttps)
+    if(normalizedAddress == null || name.isBlank()) { invalid = true } else scope.launch {
      busy = true
-     val draft = (original ?: WebAppEntity(id, name, address, displayOrder = 0, createdAt = 0, updatedAt = 0)).copy(name = name, startUrl = address, iconRef = icon, javaScript = javaScript, images = images, textZoom = zoom.toInt())
+     val draft = (original ?: WebAppEntity(id, name, normalizedAddress, displayOrder = 0, createdAt = 0, updatedAt = 0)).copy(name = name, startUrl = normalizedAddress, iconRef = icon, javaScript = javaScript, images = images, textZoom = zoom.toInt())
      runCatching { model.repository.save(draft) }.onSuccess { close() }.onFailure { message = saveFailed }
      busy = false
     }
@@ -176,16 +178,22 @@ fun EditorScreen(model: AppViewModel, original: WebAppEntity?, close: () -> Unit
  }
  Scaffold(topBar = { TopAppBar(title = { Text(if(original == null) label("웹앱 추가", "Add web app") else label("웹앱 편집", "Edit web app")) }, navigationIcon = { IconButton(onClick = close) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, label("뒤로", "Back")) } }, actions = { TextButton(onClick = submit, enabled = !busy, modifier = Modifier.testTag("save_app")) { Text(label("저장", "Save")) } }) }) { padding ->
   Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-   OutlinedTextField(value = address, onValueChange = { address = it; invalid = false; message = "" }, label = { Text(label("웹사이트 주소", "Website address")) }, placeholder = { Text("https://example.com") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, isError = invalid && UrlPolicy.registration(address) == null, enabled = !busy, modifier = Modifier.fillMaxWidth().testTag("url_input"))
-   if(address.trim().startsWith("http://")) Text(label("HTTP 주소는 암호화되지 않습니다. 가능한 HTTPS를 사용하세요.", "HTTP is not encrypted. Use HTTPS when available."), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
+   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+     Checkbox(checked = useHttps, onCheckedChange = { useHttps = it; invalid = false }, enabled = !busy, modifier = Modifier.testTag("https_checkbox"))
+     Text("https://", style = MaterialTheme.typography.bodyMedium)
+    }
+    OutlinedTextField(value = address, onValueChange = { address = UrlPolicy.withoutWebScheme(it); invalid = false; message = "" }, label = { Text(label("웹사이트 주소", "Website address")) }, placeholder = { Text("example.com") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, isError = invalid && UrlPolicy.registrationWithScheme(address, useHttps) == null, enabled = !busy, modifier = Modifier.weight(1f).testTag("url_input"))
+   }
+   if(!useHttps) Text(label("HTTP 주소는 암호화되지 않습니다. 가능한 HTTPS를 사용하세요.", "HTTP is not encrypted. Use HTTPS when available."), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
    OutlinedButton(onClick = {
-    val url = UrlPolicy.registration(address)
+    val url = UrlPolicy.registrationWithScheme(address, useHttps)
     if(url == null) { invalid = true } else scope.launch {
      busy = true; message = ""
      runCatching { SiteMetadataLoader().load(url) }.onSuccess { details ->
       if(name.isBlank()) name = details.title
       if(icon == null) details.icon?.let { icon = model.repository.storeIcon(it) }
-      address = url; message = successMessage
+      address = UrlPolicy.withoutWebScheme(url); message = successMessage
      }.onFailure { message = failedMessage }
      busy = false
     }

@@ -11,6 +11,18 @@ class UrlPolicyTest {
   assertNull(UrlPolicy.registration("https://example.com/?code=secret&state=login"))
   assertTrue(UrlPolicy.isWeb("https://example.com/?access_token=secret"))
  }
+ @Test fun followsHttpsCheckboxEvenForPastedSchemes() {
+  assertEquals("https://example.com/", UrlPolicy.registrationWithScheme("example.com", true))
+  assertEquals("http://example.com/", UrlPolicy.registrationWithScheme("example.com", false))
+  assertEquals("https://example.com/", UrlPolicy.registrationWithScheme("http://example.com", true))
+  assertEquals("http://example.com/", UrlPolicy.registrationWithScheme("https://example.com", false))
+  assertEquals("example.com/path", UrlPolicy.withoutWebScheme("HTTPS://example.com/path"))
+  assertEquals("https://127.0.0.1:8873/path?q=1", UrlPolicy.registrationWithScheme("http://127.0.0.1:8873/path?q=1", true))
+ }
+ @Test fun rejectsInvalidAddressForSelectedProtocol() {
+  listOf("", "https://", "http://", "https://http://example.com", "ftp://example.com", "https:/example.com", "example .com", "/path", "user:pass@example.com", "example.com/?access_token=secret")
+   .forEach { assertNull(it, UrlPolicy.registrationWithScheme(it, true)) }
+ }
  @Test fun preservesEncodedQueryAndDefaultsToHttps() {
   assertEquals("https://example.com/", UrlPolicy.normalize("example.com"))
   assertEquals("https://example.com/?q=a%26b", UrlPolicy.normalize("https://example.com/?q=a%26b"))

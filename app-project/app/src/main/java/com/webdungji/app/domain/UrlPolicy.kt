@@ -4,6 +4,19 @@ import java.net.URI
 import java.net.IDN
 
 object UrlPolicy {
+ /** A pasted HTTP(S) prefix is removed before the HTTPS checkbox is applied. */
+ fun withoutWebScheme(input: String): String =
+  input.trim().replaceFirst(Regex("^https?://", RegexOption.IGNORE_CASE), "")
+
+ fun registrationWithScheme(input: String, useHttps: Boolean): String? {
+  val trimmed = input.trim()
+  if (trimmed.isEmpty() || trimmed.any { it.isISOControl() || it.isWhitespace() }) return null
+  val stripped = withoutWebScheme(trimmed)
+  // Reject unsupported, malformed and repeated protocols rather than silently changing hosts.
+  if (Regex("^[a-zA-Z][a-zA-Z0-9+.-]*:").containsMatchIn(stripped)) return null
+  if (stripped.contains("://") || stripped.startsWith("//") || stripped.startsWith("/")) return null
+  return registration("${if (useHttps) "https" else "http"}://$stripped")
+ }
  fun normalize(input: String): String? = runCatching {
   if(input.any { it.isISOControl() }) return null
   var value = input.trim()

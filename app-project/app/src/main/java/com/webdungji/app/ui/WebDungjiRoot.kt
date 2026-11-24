@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
@@ -178,13 +179,25 @@ fun EditorScreen(model: AppViewModel, original: WebAppEntity?, close: () -> Unit
  }
  Scaffold(topBar = { TopAppBar(title = { Text(if(original == null) label("웹앱 추가", "Add web app") else label("웹앱 편집", "Edit web app")) }, navigationIcon = { IconButton(onClick = close) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, label("뒤로", "Back")) } }, actions = { TextButton(onClick = submit, enabled = !busy, modifier = Modifier.testTag("save_app")) { Text(label("저장", "Save")) } }) }) { padding ->
   Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-   Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-     Checkbox(checked = useHttps, onCheckedChange = { useHttps = it; invalid = false }, enabled = !busy, modifier = Modifier.testTag("https_checkbox"))
-     Text("https://", style = MaterialTheme.typography.bodyMedium)
-    }
-    OutlinedTextField(value = address, onValueChange = { address = UrlPolicy.withoutWebScheme(it); invalid = false; message = "" }, label = { Text(label("웹사이트 주소", "Website address")) }, placeholder = { Text("example.com") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), singleLine = true, isError = invalid && UrlPolicy.registrationWithScheme(address, useHttps) == null, enabled = !busy, modifier = Modifier.weight(1f).testTag("url_input"))
-   }
+   OutlinedTextField(
+    value = address,
+    onValueChange = { address = UrlPolicy.withoutWebScheme(it); invalid = false; message = "" },
+    label = { Text(label("웹사이트 주소", "Website address")) },
+    placeholder = { Text("example.com") },
+    leadingIcon = {
+     Row(verticalAlignment = Alignment.CenterVertically) {
+      val httpsLabel = label("HTTPS 사용", "Use HTTPS")
+      Checkbox(checked = useHttps, onCheckedChange = { useHttps = it; invalid = false }, enabled = !busy, modifier = Modifier.testTag("https_checkbox").semantics { contentDescription = httpsLabel })
+      Text(if(useHttps) "https://" else "http://", style = MaterialTheme.typography.bodyMedium, color = if(busy) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
+      Spacer(Modifier.width(4.dp))
+     }
+    },
+    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+    singleLine = true,
+    isError = invalid && UrlPolicy.registrationWithScheme(address, useHttps) == null,
+    enabled = !busy,
+    modifier = Modifier.fillMaxWidth().testTag("url_input")
+   )
    if(!useHttps) Text(label("HTTP 주소는 암호화되지 않습니다. 가능한 HTTPS를 사용하세요.", "HTTP is not encrypted. Use HTTPS when available."), color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall)
    OutlinedButton(onClick = {
     val url = UrlPolicy.registrationWithScheme(address, useHttps)

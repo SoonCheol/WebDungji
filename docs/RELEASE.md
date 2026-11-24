@@ -8,3 +8,4 @@
 - Settings checks /repos/SoonCheol/WebDungji/releases/latest and opens the matching APK asset in the browser.
 - Installation is controlled by Android, not silently done by app. Never uninstall the current app or wipe data as part of an update.
 - Check run conclusion, release asset, signature and device behavior separately.
+- v0.2.2 / versionCode 4: integrated HTTP(S) address field; retain existing signing configuration. CI and release verification pending.
